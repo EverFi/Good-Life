@@ -1,6 +1,6 @@
 # Good Life
 
-Simple and flexible wrapper for HTML5 local storage. Good life allows gives you the ability to track the age of items stored in storage. It also returns items in their original data type form. Gone are the days of storing JavaScript objects and getting back the strigified version of that object - that's not living the good life!
+Simple and flexible wrapper for HTML5 local storage. Good life gives you the ability to track the age of items stored in storage. It also returns items in their original data type form. Gone are the days of storing JavaScript objects and getting back the strigified version of that object - that's not living the good life!
 
 # Usage
 
@@ -16,7 +16,7 @@ localStorage.getItem( 'item' ); // "5" Doh!
 
 
 // the new hotness
-var store = Goodlife.store;
+var store = GoodLife.store;
 store.save( 'mykey', { life: 'isGood' } );
 store.get( 'mykey' ); // { life: 'good' } aw yea!!
 
