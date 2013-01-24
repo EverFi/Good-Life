@@ -34,4 +34,4 @@ console.log( store.age( 'anotherKey' ) ); // 500 (give or take a few millisecond
 store.setCacheMaxAge( 120000 );
 
 ```
-Good life also supports the removal of items and clearing of localstorage. More features coming soon. Launch index.html to see test results.
+Good life also supports the removal of items and clearing of localStorage. More features coming soon (including fallback for browsers that don't support localStorage). Launch index.html to see test results.
