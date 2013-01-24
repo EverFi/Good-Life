@@ -8,17 +8,20 @@ Simple and flexible wrapper for HTML5 local storage. Good life allows gives you 
 
 // old and busted
 localStorage.setItem( 'mykey', { life: 'sucks'} );
-var obj = localStorage.getItem( 'mykey' );
+localStorage.getItem( 'mykey' ); // "[object Object]" My life sucks!
 
-console.log( obj ); // "[object Object]" My life sucks!
+
+localStorage.setItem( 'number', 5 );
+localStorage.getItem( 'item' ); // "5" Doh!
 
 
 // the new hotness
 var store = Goodlife.store;
 store.save( 'mykey', { life: 'isGood' } );
-var obj = store.get( 'mykey' );
+store.get( 'mykey' ); // { life: 'good' } aw yea!!
 
-console.log( obj ); // { life: 'good' } aw yea!!
+store.save( 'number', 5 );
+store.get( 'mykey' ); // 5 woohoo!!
 
 // track the age of an item
 // item save returns the momenent it was persisted in milliseconds
