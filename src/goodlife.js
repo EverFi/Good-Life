@@ -1,71 +1,180 @@
 (function(GoodLife){
 
+  /*
+  -------------- Private Nitty Gritty ----------------
+  */
+  var MAX_AGE = 60000;
+
+  var NAMESPACE = "gl.items";
+
+  var _beginsWithPeriod = function (str) {
+    return (/^\./).test( str );
+  };
+
+  var _endsWithPeriod = function (str) {
+    return (/\.$/).test( str );
+  };
+
+  var _isKeyForNamespace = function(key) {
+    return key.indexOf( NAMESPACE + '.' ) === 0;
+  };
+
+  var _birthdate = function(key, items) {
+    key = _formattedKey(key);
+    return items[ key ].birth;
+  };
+
+  var _writeItem = function(key, data) {
+    var origKey = key;
+    key = _formattedKey( key );
+    var markObject;
+    var items;
+    var markNumber;
+    if ( typeof data === 'object' ) {
+      data = JSON.stringify( data );
+      markObject = true;
+    } else if ( typeof data === 'number' ) {
+      markNumber = true;
+    }
+    localStorage.setItem(key, data);
+    _birth( key );
+    if ( markObject ) {
+      items = _loadItems();
+      items[ key ].isObject = true;
+      _saveItems( items );
+    } else if ( markNumber ) {
+      items = _loadItems();
+      items[ key ].isNumber = true;
+      _saveItems( items );
+    }
+    if ( !items ) { items = _loadItems(); }
+    return items[ key ].birth;
+  };
+
+  var _fetchItem = function(key) {
+    key = _formattedKey( key );
+    var tmp = localStorage.getItem( key );
+    var items = _loadItems();
+    if ( items[ key ].isObject ) {
+      tmp = JSON.parse( tmp );
+    } else if ( items[ key ].isNumber ) {
+      tmp = parseFloat( tmp );
+    }
+    return tmp;
+  };
+
+  var _formattedKey = function( key ) {
+    if ( !_beginsWithPeriod( key ) ) {
+      key = '.' + key;
+    }
+    return NAMESPACE + key;
+  };
+
+  var _loadItems = function(namespace) {
+    var ns = namespace || NAMESPACE;
+    var items = localStorage.getItem( ns );
+    if ( !items ) {
+      localStorage.setItem( NAMESPACE, JSON.stringify({}) );
+    }
+    return JSON.parse( localStorage.getItem( ns ) );
+  };
+
+  var _saveItems = function(newItems) {
+    localStorage.setItem( NAMESPACE, JSON.stringify(newItems) );
+  };
+
+  var _birth = function(key) {
+    var items = _loadItems();
+    items[ key ] = {};
+    items[ key ].birth = Date.now();
+    _saveItems( items );
+  };
+
+  var _kill = function(key) {
+    var items = _loadItems();
+    delete items[ key ];
+    this._saveItems( items );
+  };
+
+  var _isTooOld = function(key) {
+    return GoodLife.store.age( key ) > MAX_AGE;
+  };
+
+  var _markAccess = function(key) {
+    if ( GoodLife.store.itemExists( key ) ) {
+      var items = _loadItems();
+      items[ key ].lastAccess = Date.now();
+      _saveItems( items );
+    }
+  };
+
+  var _exists = function(key) {
+    key = _formattedKey( key );
+    var items = _loadItems();
+    if ( localStorage.getItem( key ) && items[ key ] ) {
+      return true;
+    }
+    return false;
+  };
+
+  var _remove = function(key) {
+    key = _formattedKey( key );
+    if ( GoodLife.store.localStorageSupport() ) {
+      var items = _loadItems();
+      localStorage.removeItem(key);
+      delete items[ key ];
+      _saveItems( items );
+    }
+  };
+
+  var _age = function(key) {
+    var items = _loadItems();
+    if ( _exists( key ) ) {
+      var items = _loadItems();
+      var fkey = _formattedKey( key );
+      if ( items[ fkey ] ) {
+        var age = Date.now() - items[ fkey ].birth;
+        return age;
+      }
+    }
+  };
+
+  /*
+  ------------- Public API ---------------
+  */
+
   GoodLife.store = {
 
-    _loadItems: function() {
-      var items = localStorage.getItem('items');
-      if ( !items ) {
-        localStorage.setItem('items', JSON.stringify({}));
+    setNamespace: function(ns) {
+      if ( !_endsWithPeriod( ns ) ) {
+        NAMESPACE = ns + '.items';
+      } else {
+        NAMESPACE = ns + 'items';
       }
-      return JSON.parse( localStorage.getItem('items') );
     },
 
-    _saveItems: function(newItems) {
-      localStorage.setItem('items', JSON.stringify(newItems));
+    originalNamespace: function() {
+      NAMESPACE = 'gl.items';
     },
-
-    MAX_AGE: 60000,
 
     setCacheMaxAge: function (age) {
-      this.MAX_AGE = age;
+      MAX_AGE = age;
+    },
+
+    getCacheMaxAge: function() {
+      return MAX_AGE;
     },
 
     itemExists: function(key) {
-      var items = this._loadItems();
-      if ( localStorage.getItem( key ) && items[ key ] ) {
-        return true;
-      }
-      return false;
-    },
-
-    _birth: function(key) {
-      var items = this._loadItems();
-      items[ key ] = {};
-      items[ key ].birth = Date.now();
-      this._saveItems( items );
-    },
-
-    _kill: function(key) {
-      var items = this._loadItems();
-      delete items[ key ];
-      this._saveItems( items );
+      return _exists( key );
     },
 
     age: function(key) {
-      var items = this._loadItems();
-      if ( this.itemExists( key ) ) {
-        var items = this._loadItems();
-        if ( items[ key ] ) {
-          var age = Date.now() - items[ key ].birth;
-          return age;
-        }
-      }
-    },
-
-    _isTooOld: function(key) {
-      return this.age( key ) > this.MAX_AGE;
-    },
-
-    _markAccess: function(key) {
-      if ( this.itemExists( key ) ) {
-        var items = this._loadItems();
-        items[ key ].lastAccess = Date.now();
-        this._saveItems( items );
-      }
+      return _age(key);
     },
 
     init: function() {
-      localStorage.setItem('items', JSON.stringify({}));
+      localStorage.setItem( NAMESPACE, JSON.stringify({}) );
     },
 
     localStorageSupport: function() {
@@ -77,58 +186,30 @@
     },
 
     get: function(key) {
-      if ( this.localStorageSupport() && this.itemExists( key ) ) {
-        if ( !this._isTooOld( key ) ) {
-          this._markAccess( key );
-          var tmp = localStorage.getItem( key );
-          var items = this._loadItems();
-          if ( items[ key ].isObject ) {
-            tmp = JSON.parse( tmp );
-          } else if ( items[ key ].isNumber ) {
-            tmp = parseFloat( tmp );
-          }
-          return tmp;
+      if ( this.localStorageSupport() ) {
+        if ( !_isTooOld( key ) ) {
+          return _fetchItem( key );
         }
       }
     },
 
-    save: function(key, data) {
+    save: function(key, data, namespace) {
       if ( this.localStorageSupport() ) {
-        var markObject;
-        var markNumber;
-        if ( typeof data === 'object' ) {
-          data = JSON.stringify( data );
-          markObject = true;
-        } else if ( typeof data === 'number' ) {
-          markNumber = true;
-        }
-        localStorage.setItem(key, data);
-        this._birth( key );
-        if ( markObject ) {
-          var items = this._loadItems();
-          items[ key ].isObject = true;
-          this._saveItems( items );
-        } else if ( markNumber ) {
-          var items = this._loadItems();
-          items[ key ].isNumber = true;
-          this._saveItems( items );
-        }
-        if ( !items ) { items = this._loadItems(); }
-        return items[ key ].birth;
+        _writeItem( key, data );
       }
     },
 
     remove: function(key) {
-      if ( this.localStorageSupport() ) {
-        var items = this._loadItems();
-        localStorage.removeItem(key);
-        delete items[ key ];
-        this._saveItems( items );
-      }
+      _remove(key);
     },
 
     clear: function() {
       if ( this.localStorageSupport() ) {
+        // for (var key in localStorage) {
+        //   if ( _isKeyForNamespace( key ) ) {
+        //     // console.log('delete me\n')
+        //   }
+        // }
         localStorage.clear();
         this.init();
       }

@@ -15,10 +15,6 @@ describe("GoodLife", function() {
       store.clear();
     });
 
-    it("should initialize with no items", function() {
-      expect( store._loadItems() ).toEqual( {} );
-    });
-
     it("should cache a string item", function() {
       var key = 'key.for.string'
       var stringItem = "goodlife";
@@ -51,9 +47,9 @@ describe("GoodLife", function() {
     it("should set/get max age for cached items", function(){
       var defaultMax = 60000; // one minute
       var newMax = 120000; // two minutes
-      expect( store.MAX_AGE ).toEqual( defaultMax );
+      expect( store.getCacheMaxAge() ).toEqual( defaultMax );
       store.setCacheMaxAge( newMax );
-      expect( store.MAX_AGE ).toEqual( newMax );
+      expect( store.getCacheMaxAge() ).toEqual( newMax );
     });
 
     it("should check for an item's existence", function(){
@@ -72,6 +68,21 @@ describe("GoodLife", function() {
       expect( store.itemExists( key ) ).toEqual( true );
       store.remove( key );
       expect( store.itemExists( key ) ).toEqual( false );
+    });
+
+    it("saves two items with the same key under different namespaces", function(){
+      var diffNamespace = 'com.company';
+      var key = "key";
+
+      store.save( key, "foo" );
+      store.setNamespace( diffNamespace );
+      store.save( key, "bar");
+
+      var val = store.get( key );
+      expect( val ).toEqual( "bar" );
+      store.originalNamespace();
+      val = store.get( key );
+      expect( val ).toEqual( "foo" );
     });
 
     it("should track a cached item's age", function(){
