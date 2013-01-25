@@ -1,6 +1,6 @@
 # Good Life
 
-Simple and flexible wrapper for HTML5 local storage. Good life gives you the ability to track the age of items stored in storage. It also returns items in their original data type form. Gone are the days of storing JavaScript objects and getting back the "[object object]" thingy - that's not living the good life! Good Life also supports namespacing.
+Simple and flexible wrapper for HTML5 localStorage. GoodLife gives you the ability to track the age of items cached in storage. It also returns items in their original data type form. Gone are the days of storing JavaScript objects and getting back the "[object object]" thingy - that's not living the good life! Good Life also supports namespacing.
 
 # Usage
 
@@ -39,9 +39,9 @@ store.save( key, "foo" );
 store.setNamespace( diffNamespace );
 store.save( key, "bar");
 
-store.get( key ); // bar
+store.get( key ); // "bar"
 store.originalNamespace(); // watch closely
-store.get( key ); // woah!
+store.get( key ); // "foo" woah!
 
 // by default, items expire after 1 minute and accessing them past that expiration
 // will return null. you can however extend the life of items
